@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Photography Website — Questionnaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- CONFIG: edit these to personalize ---------- */
+  /* Change the title above and the masthead text below to your studio's name. */
+
+  :root{
+    --bg:#FAF6EF;
+    --surface:#FFFFFF;
+    --surface-2:#F3EDE2;
+    --text:#2A2521;
+    --text-dim:#5B5147;
+    --text-faint:#8F8475;
+    --accent:#92702A;
+    --accent-strong:#7A5C20;
+    --accent-soft:rgba(146,112,42,0.12);
+    --on-accent:#FFFBF3;
+    --line:#E5DDCC;
+    --error:#A3432D;
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0;}
+  p{margin:0;}
+  a{color:var(--accent);}
+
+  .wrap{max-width:1100px; margin:0 auto; padding:32px 24px 80px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{margin-bottom:36px;}
+  .masthead .eyebrow{
+    font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:10px; display:block;
+  }
+  .masthead h1{font-size:clamp(28px,4vw,40px); letter-spacing:-0.01em; color:var(--text);}
+  .masthead .subtitle{color:var(--text-dim); margin-top:10px; font-size:15.5px; max-width:560px;}
+
+  /* ---------- App shell ---------- */
+  .app-shell{display:flex; gap:48px; align-items:flex-start;}
+  .sidebar{width:230px; flex-shrink:0; position:sticky; top:32px;}
+  .main{flex:1; min-width:0;}
+
+  /* ---------- Filmstrip / checkpoints ---------- */
+  .filmstrip{position:relative; padding:0 14px; margin-left:-14px;}
+  .filmstrip::before,.filmstrip::after{
+    content:''; position:absolute; top:6px; bottom:6px; width:9px;
+    background-color:var(--line);
+    background-image:radial-gradient(circle, var(--bg) 2.1px, transparent 2.3px);
+    background-size:9px 18px; background-repeat:repeat-y;
+  }
+  .filmstrip::before{left:0;}
+  .filmstrip::after{right:0;}
+
+  .frame{
+    display:flex; gap:12px; align-items:flex-start; padding:11px 10px;
+    border-radius:2px; opacity:0.42; transition:opacity .2s ease;
+  }
+  .frame.is-current{opacity:1;}
+  .frame.is-done{opacity:0.85;}
+  .frame-num{
+    font-family:var(--font-display); font-size:19px; color:var(--text-faint);
+    width:26px; flex-shrink:0; line-height:1.2;
+  }
+  .frame.is-current .frame-num{color:var(--accent);}
+  .frame.is-done .frame-num::after{content:'✓'; font-size:12px; margin-left:4px; color:var(--accent); font-family:var(--font-body);}
+  .frame-label{font-size:13px; color:var(--text-dim); padding-top:2px;}
+  .frame.is-current .frame-label{color:var(--text); font-weight:500;}
+
+  .progress-text{
+    font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint);
+    margin:18px 0 6px 0; padding-left:10px;
+  }
+
+  /* ---------- Card / step panel ---------- */
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:6px;
+    padding:36px 36px 30px;
+    box-shadow:0 1px 2px rgba(42,37,33,0.03), 0 12px 32px rgba(42,37,33,0.05);
+  }
+  .step{display:none;}
+  .step.is-active{display:block; animation:fadeIn .35s ease;}
+  @media (prefers-reduced-motion: reduce){ .step.is-active{animation:none;} }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .step h2{font-size:24px; margin-bottom:6px;}
+  .step .step-intro{color:var(--text-dim); margin-bottom:26px; font-size:14.5px;}
+
+  .field{margin-bottom:22px;}
+  .field label.q{
+    display:block; font-weight:600; font-size:14.5px; margin-bottom:8px; color:var(--text);
+  }
+  .field .hint{display:block; font-weight:400; font-size:13px; color:var(--text-faint); margin-top:4px;}
+  .field input[type=text], .field input[type=email], .field input[type=tel], .field textarea{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--text);
+    padding:12px 14px; border-radius:3px; font-family:var(--font-body); font-size:15px;
+  }
+  .field textarea{resize:vertical; min-height:90px; font-family:var(--font-body);}
+  .field input:focus, .field textarea:focus{
+    outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+
+  /* ---------- Choice cards (radio/checkbox) ---------- */
+  .choice-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px;}
+  .choice-grid.stack{grid-template-columns:1fr;}
+  .choice{
+    display:flex; align-items:flex-start; gap:10px; padding:13px 15px;
+    border:1px solid var(--line); border-radius:3px; background:var(--surface-2);
+    cursor:pointer; transition:border-color .15s, background .15s; position:relative;
+  }
+  .choice:hover{border-color:var(--text-faint);}
+  .choice:focus-within{outline:2px solid var(--accent); outline-offset:2px;}
+  .choice input{position:absolute; opacity:0; width:0; height:0;}
+  .choice .mark{
+    width:18px; height:18px; flex-shrink:0; margin-top:1px; position:relative;
+    border:1.5px solid var(--text-faint); background:transparent;
+  }
+  .choice .mark-radio{border-radius:50%;}
+  .choice .mark-check{border-radius:4px;}
+  .choice.is-checked{border-color:var(--accent); background:var(--accent-soft);}
+  .choice.is-checked .mark{border-color:var(--accent); background:var(--accent);}
+  .choice.is-checked .mark-radio::after{
+    content:''; position:absolute; inset:4px; border-radius:50%; background:var(--on-accent);
+  }
+  .choice.is-checked .mark-check::after{
+    content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--on-accent); font-size:12px; font-weight:700;
+  }
+  .choice .label-text{font-size:14.5px; line-height:1.35; padding-top:0.5px;}
+  .choice .label-sub{display:block; font-size:12.5px; color:var(--text-faint); margin-top:3px;}
+
+  .conditional{
+    margin-top:14px; padding:16px; border-left:2px solid var(--accent);
+    background:var(--surface-2); border-radius:0 3px 3px 0;
+  }
+  .hidden{display:none !important;}
+
+  .price-rows{margin-top:10px;}
+  .price-row{
+    display:flex; justify-content:space-between; align-items:center; gap:14px;
+    padding:10px 2px; border-bottom:1px solid var(--line);
+  }
+  .price-row:last-child{border-bottom:none;}
+  .price-row-label{font-size:14px; color:var(--text); flex:1;}
+  .price-row input{
+    flex:0 0 150px; width:150px; background:var(--surface-2); border:1px solid var(--line);
+    color:var(--text); padding:9px 11px; border-radius:3px; font-size:14px; font-family:var(--font-body);
+  }
+  .price-row input:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+
+  /* ---------- Nav buttons ---------- */
+  .nav-row{display:flex; justify-content:space-between; align-items:center; margin-top:32px;}
+  button{font-family:var(--font-body); cursor:pointer;}
+  .btn{
+    border:1px solid var(--line); background:var(--surface-2); color:var(--text);
+    padding:12px 22px; border-radius:3px; font-size:14.5px; font-weight:500;
+    transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--text-faint);}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:var(--on-accent); font-weight:600;}
+  .btn.primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn[disabled]{opacity:0.35; cursor:default;}
+  .btn.ghost{background:transparent;}
+
+  /* ---------- Review screen ---------- */
+  #reviewScreen{display:none;}
+  #reviewScreen.is-active{display:block; animation:fadeIn .35s ease;}
+  .summary-box{
+    background:var(--surface-2); border:1px solid var(--line); border-radius:3px;
+    padding:24px; white-space:pre-wrap; font-family:'Inter',sans-serif; font-size:13.5px;
+    color:var(--text); line-height:1.6; max-height:520px; overflow:auto;
+  }
+  .review-actions{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;}
+  .copy-feedback{font-size:13px; color:var(--accent); margin-left:6px; opacity:0; transition:opacity .2s;}
+  .copy-feedback.show{opacity:1;}
+
+  /* ---------- Mobile ---------- */
+  @media (max-width:760px){
+    .app-shell{flex-direction:column; gap:24px;}
+    .sidebar{width:100%; position:static;}
+    .filmstrip{display:flex; overflow-x:auto; gap:4px; margin-left:0; padding:8px 6px;}
+    .filmstrip::before,.filmstrip::after{display:none;}
+    .frame{flex-direction:column; align-items:center; min-width:64px; text-align:center; padding:8px 4px;}
+    .frame-label{display:none;}
+    .progress-text{display:none;}
+    .panel{padding:24px 20px;}
+    .two-col{grid-template-columns:1fr;}
+    .choice-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Print ---------- */
+  @media print{
+    .sidebar, .nav-row, .masthead .subtitle, .review-actions, .stepper-progress{display:none !important;}
+    body{background:#fff; color:#000;}
+    .panel{border:none; padding:0; box-shadow:none;}
+    .summary-box{background:#fff; color:#000; border:none; max-height:none;}
+    .app-shell{gap:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Website Questionnaire</span>
+    <h1>Tell me how you want this to look.</h1>
+    <p class="subtitle">Eight quick checkpoints, about five minutes — mostly tapping.</p>
+  </header>
+
+  <div class="app-shell">
+
+    <aside class="sidebar">
+      <div class="filmstrip" id="filmstrip">
+        <div class="frame" data-frame="1"><span class="frame-num">01</span><span class="frame-label">Business</span></div>
+        <div class="frame" data-frame="2"><span class="frame-num">02</span><span class="frame-label">Website &amp; Domain</span></div>
+        <div class="frame" data-frame="3"><span class="frame-num">03</span><span class="frame-label">Services</span></div>
+        <div class="frame" data-frame="4"><span class="frame-num">04</span><span class="frame-label">Add-Ons</span></div>
+        <div class="frame" data-frame="5"><span class="frame-num">05</span><span class="frame-label">Location &amp; Travel</span></div>
+        <div class="frame" data-frame="6"><span class="frame-num">06</span><span class="frame-label">Site Features</span></div>
+        <div class="frame" data-frame="7"><span class="frame-num">07</span><span class="frame-label">Socials</span></div>
+        <div class="frame" data-frame="8"><span class="frame-num">08</span><span class="frame-label">Final Notes</span></div>
+      </div>
+      <p class="progress-text stepper-progress" id="progressText">Checkpoint 1 of 8</p>
+    </aside>
+
+    <main class="main">
+      <div class="panel">
+
+        <!-- STEP 1 -->
+        <section class="step is-active" data-step="1">
+          <h2>The basics</h2>
+          <div class="field">
+            <label class="q" for="business_name">What's the name of your business?</label>
+            <input type="text" id="business_name" required placeholder="e.g. Maple & Light Photography">
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label class="q" for="contact_name">Your name</label>
+              <input type="text" id="contact_name" required>
+            </div>
+            <div class="field">
+              <label class="q" for="contact_email">Email</label>
+              <input type="email" id="contact_email">
+            </div>
+          </div>
+          <div class="field">
+            <label class="q" for="contact_phone">Phone <span class="hint">(optional)</span></label>
+            <input type="tel" id="contact_phone">
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="step" data-step="2">
+          <h2>Website type &amp; domain</h2>
+          <div class="field">
+            <label class="q">What kind of website do you want?</label>
+            <div class="choice-grid stack" data-group="site_type">
+              <label class="choice"><input type="radio" name="site_type" value="Portfolio only">
+                <span class="mark mark-radio"></span>
+                <span class="label-text">Just a portfolio<span class="label-sub">Your work, simply shown.</span></span>
+              </label>
+              <label class="choice"><input type="radio" name="site_type" value="Full website">
+                <span class="mark mark-radio"></span>
+                <span class="label-text">A full website<span class="label-sub">Booking, gallery, FAQs — all of it.</span></span>
+              </label>
+              <label class="choice"><input type="radio" name="site_type" value="Not sure yet">
+                <span class="mark mark-radio"></span>
+                <span class="label-text">Not sure yet<span class="label-sub">Let's talk it through.</span></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">Want your own domain? <span class="hint">($10/mo, billed separately)</span></label>
+            <div class="choice-grid" data-group="domain_wanted">
+              <label class="choice"><input type="radio" name="domain_wanted" value="Yes"><span class="mark mark-radio"></span><span class="label-text">Yes, set one up</span></label>
+              <label class="choice"><input type="radio" name="domain_wanted" value="No"><span class="mark mark-radio"></span><span class="label-text">No, that's fine</span></label>
+            </div>
+            <div class="conditional hidden" id="domainNameWrap">
+              <label class="q" for="domain_name">What domain would you like?</label>
+              <input type="text" id="domain_name" placeholder="e.g. mapleandlightphoto.com">
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="step" data-step="3">
+          <h2>What do you offer?</h2>
+          <div class="field">
+            <div class="choice-grid" data-group="services">
+              <label class="choice"><input type="checkbox" name="services" value="Weddings"><span class="mark mark-check"></span><span class="label-text">Weddings</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Engagements"><span class="mark mark-check"></span><span class="label-text">Engagements</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Portraits"><span class="mark mark-check"></span><span class="label-text">Portraits</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Maternity & newborn"><span class="mark mark-check"></span><span class="label-text">Maternity &amp; newborn</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Family"><span class="mark mark-check"></span><span class="label-text">Family</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Events"><span class="mark mark-check"></span><span class="label-text">Events</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Quinceañeras"><span class="mark mark-check"></span><span class="label-text">Quinceañeras</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Corporate & headshots"><span class="mark mark-check"></span><span class="label-text">Corporate &amp; headshots</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Product & commercial"><span class="mark mark-check"></span><span class="label-text">Product &amp; commercial</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Fashion & editorial"><span class="mark mark-check"></span><span class="label-text">Fashion &amp; editorial</span></label>
+              <label class="choice"><input type="checkbox" name="services" value="Real estate"><span class="mark mark-check"></span><span class="label-text">Real estate</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="q" for="services_other">Anything else?</label>
+            <input type="text" id="services_other" placeholder="Type it here">
+          </div>
+          <div class="field">
+            <label class="q">Prices <span class="hint">(optional)</span></label>
+            <div class="price-rows hidden" id="servicePriceRows"></div>
+            <p class="hint" id="servicePriceEmpty">Pick a service above first.</p>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section class="step" data-step="4">
+          <h2>Add-ons &amp; extras</h2>
+          <div class="field">
+            <div class="choice-grid" data-group="addons">
+              <label class="choice"><input type="checkbox" name="addons" value="Prints & wall art"><span class="mark mark-check"></span><span class="label-text">Prints &amp; wall art</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Photo albums"><span class="mark mark-check"></span><span class="label-text">Photo albums</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Framing"><span class="mark mark-check"></span><span class="label-text">Framing</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Advanced retouching"><span class="mark mark-check"></span><span class="label-text">Advanced retouching</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Rush / express delivery"><span class="mark mark-check"></span><span class="label-text">Rush / express delivery</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Hair & makeup partner"><span class="mark mark-check"></span><span class="label-text">Hair &amp; makeup partner</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Videography"><span class="mark mark-check"></span><span class="label-text">Videography</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="Photo booth"><span class="mark mark-check"></span><span class="label-text">Photo booth</span></label>
+              <label class="choice"><input type="checkbox" name="addons" value="None of these"><span class="mark mark-check"></span><span class="label-text">None of these</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="q" for="addons_other">Anything else?</label>
+            <input type="text" id="addons_other" placeholder="Type it here">
+          </div>
+          <div class="field">
+            <label class="q">Prices <span class="hint">(optional)</span></label>
+            <div class="price-rows hidden" id="addonPriceRows"></div>
+            <p class="hint" id="addonPriceEmpty">Pick an add-on above first.</p>
+          </div>
+        </section>
+
+        <!-- STEP 5 -->
+        <section class="step" data-step="5">
+          <h2>Where you shoot</h2>
+          <div class="field">
+            <label class="q">Where do you shoot?</label>
+            <div class="choice-grid" data-group="shoot_where">
+              <label class="choice"><input type="checkbox" name="shoot_where" value="Studio"><span class="mark mark-check"></span><span class="label-text">Studio</span></label>
+              <label class="choice"><input type="checkbox" name="shoot_where" value="Outdoors / on location"><span class="mark mark-check"></span><span class="label-text">Outdoors / on location</span></label>
+              <label class="choice"><input type="checkbox" name="shoot_where" value="Client's home"><span class="mark mark-check"></span><span class="label-text">Client's home</span></label>
+              <label class="choice"><input type="checkbox" name="shoot_where" value="Destination / venue"><span class="mark mark-check"></span><span class="label-text">Destination / venue</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label class="q" for="shoot_where_other">Anywhere else?</label>
+            <input type="text" id="shoot_where_other" placeholder="Type it here">
+          </div>
+          <div class="field">
+            <label class="q">Do you travel for shoots?</label>
+            <div class="choice-grid stack" data-group="travels">
+              <label class="choice"><input type="radio" name="travels" value="No — studio or local only"><span class="mark mark-radio"></span><span class="label-text">No — studio or local only</span></label>
+              <label class="choice"><input type="radio" name="travels" value="Yes — within driving distance"><span class="mark mark-radio"></span><span class="label-text">Yes — within driving distance</span></label>
+              <label class="choice"><input type="radio" name="travels" value="Yes — anywhere"><span class="mark mark-radio"></span><span class="label-text">Yes — anywhere</span></label>
+            </div>
+            <div class="conditional hidden" id="travelNotesWrap">
+              <label class="q" for="travel_notes">Range or fees?</label>
+              <input type="text" id="travel_notes" placeholder="e.g. up to 50 miles free, $0.50/mile after that">
+            </div>
+          </div>
+          <div class="field">
+            <label class="q">Show that on the site?</label>
+            <div class="choice-grid" data-group="show_travel_site">
+              <label class="choice"><input type="radio" name="show_travel_site" value="Yes"><span class="mark mark-radio"></span><span class="label-text">Yes</span></label>
+              <label class="choice"><input type="radio" name="show_travel_site" value="No"><span class="mark mark-radio"></span><span class="label-text">No</span></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 6 -->
+        <section class="step" data-step="6">
+          <h2>Site features</h2>
+
+          <div class="field">
+            <label class="q">Want an FAQ section?</label>
+            <div class="choice-grid" data-group="want_faq">
+              <label class="choice"><input type="radio" name="want_faq" value="Yes"><span class="mark mark-radio"></span><span class="label-text">Yes</span></label>
+              <label class="choice"><input type="radio" name="want_faq" value="No"><span class="mark mark-radio"></span><span class="label-text">No</span></label>
+            </div>
+            <div class="conditional hidden" id="faqNotesWrap">
+              <label class="q" for="faq_notes">Common client questions?</label>
+              <textarea id="faq_notes" placeholder="List a few"></textarea>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">Want a booking form on the site?</label>
+            <div class="choice-grid" data-group="want_booking">
+              <label class="choice"><input type="radio" name="want_booking" value="Yes"><span class="mark mark-radio"></span><span class="label-text">Yes</span></label>
+              <label class="choice"><input type="radio" name="want_booking" value="No"><span class="mark mark-radio"></span><span class="label-text">No</span></label>
+            </div>
+            <div class="conditional hidden" id="bookingTypeWrap">
+              <label class="q">Always includes name, date, email. Add more?</label>
+              <div class="choice-grid" data-group="booking_extra_fields">
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="Phone number"><span class="mark mark-check"></span><span class="label-text">Phone number</span></label>
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="Event type"><span class="mark mark-check"></span><span class="label-text">Event type</span></label>
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="Location"><span class="mark mark-check"></span><span class="label-text">Location</span></label>
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="Budget range"><span class="mark mark-check"></span><span class="label-text">Budget range</span></label>
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="Message / vision"><span class="mark mark-check"></span><span class="label-text">Message / vision</span></label>
+                <label class="choice"><input type="checkbox" name="booking_extra_fields" value="How they heard about you"><span class="mark mark-check"></span><span class="label-text">How they heard about you</span></label>
+              </div>
+              <div class="field" style="margin-top:14px; margin-bottom:0;">
+                <label class="q" for="booking_extra_other">Anything else?</label>
+                <input type="text" id="booking_extra_other" placeholder="Type it here">
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">Show pricing on the site?</label>
+            <div class="choice-grid" data-group="show_pricing">
+              <label class="choice"><input type="radio" name="show_pricing" value="Yes, show it"><span class="mark mark-radio"></span><span class="label-text">Yes, show it</span></label>
+              <label class="choice"><input type="radio" name="show_pricing" value="No, by request only"><span class="mark mark-radio"></span><span class="label-text">By request only</span></label>
+              <label class="choice"><input type="radio" name="show_pricing" value="Not sure"><span class="mark mark-radio"></span><span class="label-text">Not sure</span></label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="q">Want a digital gallery for clients?</label>
+            <div class="choice-grid" data-group="want_gallery_link">
+              <label class="choice"><input type="radio" name="want_gallery_link" value="Yes"><span class="mark mark-radio"></span><span class="label-text">Yes</span></label>
+              <label class="choice"><input type="radio" name="want_gallery_link" value="No"><span class="mark mark-radio"></span><span class="label-text">No</span></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 7 -->
+        <section class="step" data-step="7">
+          <h2>Socials &amp; links</h2>
+          <div class="two-col">
+            <div class="field"><label class="q" for="social_instagram">Instagram</label><input type="text" id="social_instagram" placeholder="@handle or link"></div>
+            <div class="field"><label class="q" for="social_facebook">Facebook</label><input type="text" id="social_facebook" placeholder="page name or link"></div>
+            <div class="field"><label class="q" for="social_tiktok">TikTok</label><input type="text" id="social_tiktok" placeholder="@handle or link"></div>
+            <div class="field"><label class="q" for="social_pinterest">Pinterest</label><input type="text" id="social_pinterest" placeholder="link"></div>
+            <div class="field"><label class="q" for="social_youtube">YouTube</label><input type="text" id="social_youtube" placeholder="channel link"></div>
+            <div class="field"><label class="q" for="google_business">Google Business</label><input type="text" id="google_business" placeholder="link, if you have one"></div>
+          </div>
+          <div class="field">
+            <label class="q" for="existing_website">Existing website?</label>
+            <input type="text" id="existing_website" placeholder="link, if so">
+          </div>
+        </section>
+
+        <!-- STEP 8 -->
+        <section class="step" data-step="8">
+          <h2>Anything else?</h2>
+          <div class="field">
+            <textarea id="anything_else" style="min-height:160px" placeholder="Style inspo, colors, sites you love…"></textarea>
+          </div>
+        </section>
+
+        <!-- NAV -->
+        <div class="nav-row" id="navRow">
+          <button class="btn ghost" id="backBtn">Back</button>
+          <button class="btn primary" id="nextBtn">Next</button>
+        </div>
+      </div>
+
+      <!-- REVIEW SCREEN -->
+      <div class="panel" id="reviewScreen">
+        <h2>Ready to send</h2>
+        <div class="summary-box" id="summaryOutput"></div>
+        <div class="review-actions">
+          <button class="btn primary" id="copyBtn">Copy to clipboard</button>
+          <button class="btn" id="textBtn">Text it to (929) 323-9892</button>
+          <button class="btn ghost" id="editBtn">Edit answers</button>
+          <span class="copy-feedback" id="copyFeedback">Copied!</span>
+        </div>
+        <p class="hint" style="margin-top:10px;">Text opens her Messages app. On desktop, use copy instead.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ---------- CONFIG ---------- */
+  var RECIPIENT_PHONE = '9293239892'; // where "Text it to..." sends the results
+
+  var STEP_COUNT = 8;
+  var current = 1;
+
+  var frames = document.querySelectorAll('.frame');
+  var steps = document.querySelectorAll('.step');
+  var progressText = document.getElementById('progressText');
+  var backBtn = document.getElementById('backBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var navRow = document.getElementById('navRow');
+  var reviewScreen = document.getElementById('reviewScreen');
+
+  function showStep(n){
+    steps.forEach(function(s){
+      s.classList.toggle('is-active', parseInt(s.dataset.step,10) === n);
+    });
+    frames.forEach(function(f){
+      var fn = parseInt(f.dataset.frame,10);
+      f.classList.toggle('is-current', fn === n);
+      f.classList.toggle('is-done', fn < n);
+    });
+    progressText.textContent = 'Checkpoint ' + n + ' of ' + STEP_COUNT;
+    backBtn.disabled = (n === 1);
+    nextBtn.textContent = (n === STEP_COUNT) ? 'Review answers' : 'Next';
+    navRow.classList.remove('hidden');
+    reviewScreen.classList.remove('is-active');
+    document.querySelector('.panel').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function validateStep(n){
+    if(n === 1){
+      var bn = document.getElementById('business_name');
+      var cn = document.getElementById('contact_name');
+      if(!bn.value.trim() || !cn.value.trim()){
+        bn.focus();
+        return false;
+      }
+    }
+    return true;
+  }
+
+  nextBtn.addEventListener('click', function(){
+    if(!validateStep(current)) return;
+    if(current < STEP_COUNT){
+      current++;
+      showStep(current);
+    } else {
+      goToReview();
+    }
+  });
+
+  backBtn.addEventListener('click', function(){
+    if(current > 1){
+      current--;
+      showStep(current);
+    }
+  });
+
+  document.getElementById('editBtn').addEventListener('click', function(){
+    reviewScreen.classList.remove('is-active');
+    showStep(current);
+  });
+
+  function goToReview(){
+    document.querySelector('.panel').classList.add('hidden');
+    reviewScreen.classList.add('is-active');
+    frames.forEach(function(f){ f.classList.add('is-done'); f.classList.remove('is-current'); });
+    progressText.textContent = 'All checkpoints complete';
+    compileSummary();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  /* ---------- choice card behavior ---------- */
+  document.querySelectorAll('.choice input').forEach(function(input){
+    input.addEventListener('change', function(){
+      if(input.type === 'radio'){
+        document.querySelectorAll('input[name="'+input.name+'"]').forEach(function(sib){
+          sib.closest('.choice').classList.toggle('is-checked', sib.checked);
+        });
+      } else {
+        input.closest('.choice').classList.toggle('is-checked', input.checked);
+      }
+    });
+  });
+
+  /* ---------- conditional reveals ---------- */
+  function bindConditional(groupName, targetId, showValues){
+    document.querySelectorAll('input[name="'+groupName+'"]').forEach(function(input){
+      input.addEventListener('change', function(){
+        var wrap = document.getElementById(targetId);
+        if(showValues.indexOf(input.value) > -1 && input.checked){
+          wrap.classList.remove('hidden');
+        } else if(input.checked){
+          wrap.classList.add('hidden');
+        }
+      });
+    });
+  }
+  bindConditional('domain_wanted', 'domainNameWrap', ['Yes']);
+  bindConditional('travels', 'travelNotesWrap', ['Yes — within driving distance','Yes — anywhere']);
+  bindConditional('want_faq', 'faqNotesWrap', ['Yes']);
+  bindConditional('want_booking', 'bookingTypeWrap', ['Yes']);
+
+  /* ---------- per-item price rows ---------- */
+  var servicePrices = {};
+  var addonPrices = {};
+
+  function refreshPriceRows(groupName, store, rowsId, emptyId){
+    var checked = Array.prototype.map.call(
+      document.querySelectorAll('input[name="'+groupName+'"]:checked'), function(el){ return el.value; }
+    );
+    var rows = document.getElementById(rowsId);
+    var empty = document.getElementById(emptyId);
+    rows.innerHTML = '';
+    if(checked.length === 0){
+      rows.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    rows.classList.remove('hidden');
+    checked.forEach(function(val){
+      var row = document.createElement('div');
+      row.className = 'price-row';
+      var label = document.createElement('span');
+      label.className = 'price-row-label';
+      label.textContent = val;
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = '$ amount, or "varies"';
+      input.value = store[val] || '';
+      input.addEventListener('input', function(){ store[val] = input.value; });
+      row.appendChild(label);
+      row.appendChild(input);
+      rows.appendChild(row);
+    });
+  }
+
+  document.querySelectorAll('input[name="services"]').forEach(function(el){
+    el.addEventListener('change', function(){
+      refreshPriceRows('services', servicePrices, 'servicePriceRows', 'servicePriceEmpty');
+    });
+  });
+  document.querySelectorAll('input[name="addons"]').forEach(function(el){
+    el.addEventListener('change', function(){
+      refreshPriceRows('addons', addonPrices, 'addonPriceRows', 'addonPriceEmpty');
+    });
+  });
+
+  /* ---------- helpers for compiling the summary ---------- */
+  function v(id){
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+  function radioVal(name){
+    var el = document.querySelector('input[name="'+name+'"]:checked');
+    return el ? el.value : '';
+  }
+  function checkVals(name){
+    var els = document.querySelectorAll('input[name="'+name+'"]:checked');
+    var out = [];
+    els.forEach(function(e){ out.push(e.value); });
+    return out.join(', ');
+  }
+  function orNone(s){ return s && s.length ? s : '—'; }
+
+  function compileSummary(){
+    var lines = [];
+    lines.push('PHOTOGRAPHY WEBSITE QUESTIONNAIRE — RESULTS');
+    lines.push('Generated ' + new Date().toLocaleString());
+    lines.push('');
+    lines.push('1. BUSINESS & CONTACT');
+    lines.push('Business name: ' + orNone(v('business_name')));
+    lines.push('Contact name: ' + orNone(v('contact_name')));
+    lines.push('Email: ' + orNone(v('contact_email')));
+    lines.push('Phone: ' + orNone(v('contact_phone')));
+    lines.push('');
+    lines.push('2. WEBSITE TYPE & DOMAIN');
+    lines.push('Website type: ' + orNone(radioVal('site_type')));
+    lines.push('Custom domain wanted ($10/mo, billed separately): ' + orNone(radioVal('domain_wanted')));
+    lines.push('Requested domain: ' + orNone(v('domain_name')));
+    lines.push('');
+    lines.push('3. SERVICES OFFERED');
+    lines.push('Services: ' + orNone(checkVals('services')));
+    lines.push('Other services: ' + orNone(v('services_other')));
+    lines.push('Prices:');
+    var svcKeys = Object.keys(servicePrices).filter(function(k){ return servicePrices[k] && servicePrices[k].trim(); });
+    if(svcKeys.length){
+      svcKeys.forEach(function(k){ lines.push('  - ' + k + ': ' + servicePrices[k]); });
+    } else {
+      lines.push('  —');
+    }
+    lines.push('');
+    lines.push('4. ADD-ONS & EXTRAS');
+    lines.push('Add-ons: ' + orNone(checkVals('addons')));
+    lines.push('Other add-ons: ' + orNone(v('addons_other')));
+    lines.push('Prices:');
+    var addonKeys = Object.keys(addonPrices).filter(function(k){ return addonPrices[k] && addonPrices[k].trim(); });
+    if(addonKeys.length){
+      addonKeys.forEach(function(k){ lines.push('  - ' + k + ': ' + addonPrices[k]); });
+    } else {
+      lines.push('  —');
+    }
+    lines.push('');
+    lines.push('5. WHERE THEY SHOOT & TRAVEL');
+    lines.push('Shoot locations: ' + orNone(checkVals('shoot_where')));
+    lines.push('Other locations: ' + orNone(v('shoot_where_other')));
+    lines.push('Travels for shoots: ' + orNone(radioVal('travels')));
+    lines.push('Travel notes: ' + orNone(v('travel_notes')));
+    lines.push('Show travel info on site: ' + orNone(radioVal('show_travel_site')));
+    lines.push('');
+    lines.push('6. SITE FEATURES');
+    lines.push('Wants FAQ section: ' + orNone(radioVal('want_faq')));
+    lines.push('Common client questions: ' + orNone(v('faq_notes')));
+    lines.push('Wants booking form on site: ' + orNone(radioVal('want_booking')));
+    lines.push('Booking form fields: Name, Event date, Email' + (checkVals('booking_extra_fields') ? ', ' + checkVals('booking_extra_fields') : ''));
+    lines.push('Other booking fields: ' + orNone(v('booking_extra_other')));
+    lines.push('Show pricing on site: ' + orNone(radioVal('show_pricing')));
+    lines.push('Wants a digital gallery for clients: ' + orNone(radioVal('want_gallery_link')));
+    lines.push('');
+    lines.push('7. SOCIALS & LINKS');
+    lines.push('Instagram: ' + orNone(v('social_instagram')));
+    lines.push('Facebook: ' + orNone(v('social_facebook')));
+    lines.push('TikTok: ' + orNone(v('social_tiktok')));
+    lines.push('Pinterest: ' + orNone(v('social_pinterest')));
+    lines.push('YouTube: ' + orNone(v('social_youtube')));
+    lines.push('Google Business profile: ' + orNone(v('google_business')));
+    lines.push('Existing website: ' + orNone(v('existing_website')));
+    lines.push('');
+    lines.push('8. ANYTHING ELSE');
+    lines.push(orNone(v('anything_else')));
+
+    document.getElementById('summaryOutput').textContent = lines.join('\n');
+  }
+
+  /* ---------- review actions ---------- */
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var text = document.getElementById('summaryOutput').textContent;
+    var feedback = document.getElementById('copyFeedback');
+    function flash(){
+      feedback.classList.add('show');
+      setTimeout(function(){ feedback.classList.remove('show'); }, 1600);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(flash).catch(function(){
+        alert('Could not copy automatically — select the text and copy it manually.');
+      });
+    } else {
+      alert('Could not copy automatically — select the text and copy it manually.');
+    }
+  });
+
+  document.getElementById('textBtn').addEventListener('click', function(){
+    var text = document.getElementById('summaryOutput').textContent;
+    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    var separator = isIOS ? '&' : '?';
+    var smsUrl = 'sms:' + RECIPIENT_PHONE + separator + 'body=' + encodeURIComponent(text);
+    window.location.href = smsUrl;
+  });
+
+  showStep(1);
+})();
+</script>
+
+</body>
+</html>
