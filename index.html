@@ -512,15 +512,19 @@
 
       <!-- PANTALLA DE REVISIÓN -->
       <div class="panel" id="reviewScreen">
-        <h2>Listo para enviar</h2>
-        <div class="summary-box" id="summaryOutput"></div>
-        <div class="review-actions">
-          <button class="btn primary" id="copyBtn">Copiar al portapapeles</button>
-          <button class="btn" id="textBtn">Enviarlo por mensaje a (929) 323-9892</button>
-          <button class="btn ghost" id="editBtn">Editar respuestas</button>
-          <span class="copy-feedback" id="copyFeedback">¡Copiado!</span>
+        <div id="reviewBeforeSubmit">
+          <h2>Listo para enviar</h2>
+          <div class="summary-box" id="summaryOutput"></div>
+          <div class="review-actions">
+            <button class="btn primary" id="submitBtn">Enviar respuestas</button>
+          </div>
+          <p class="hint" id="submitError" style="margin-top:12px; color:var(--error); display:none;">Algo salió mal al enviar. Por favor intenta de nuevo.</p>
+          <p class="hint" style="margin-top:14px;"><a href="#" id="editLink">← Volver y editar mis respuestas</a></p>
         </div>
-        <p class="hint" style="margin-top:10px; display:block;">El botón de mensaje abre la app de Mensajes. En computadora, usa copiar.</p>
+        <div id="reviewAfterSubmit" class="hidden" style="text-align:center; padding:24px 0;">
+          <h2>¡Gracias!</h2>
+          <p style="margin-top:12px; color:var(--text-dim); font-size:15.5px;">Andrea se pondrá en contacto contigo pronto.</p>
+        </div>
       </div>
     </main>
   </div>
@@ -529,7 +533,7 @@
 <script>
 (function(){
   /* ---------- CONFIG ---------- */
-  var RECIPIENT_PHONE = '9293239892'; // a dónde se envía con "Enviarlo por mensaje..."
+  var FORMSPREE_ENDPOINT = 'https://formspree.io/f/xojodyyb';
 
   var STEP_COUNT = 8;
   var current = 1;
@@ -593,7 +597,8 @@
     }
   });
 
-  document.getElementById('editBtn').addEventListener('click', function(){
+  document.getElementById('editLink').addEventListener('click', function(e){
+    e.preventDefault();
     reviewScreen.classList.remove('is-active');
     showStep(current);
   });
@@ -807,29 +812,40 @@
     document.getElementById('summaryOutput').textContent = lines.join('\n');
   }
 
-  /* ---------- acciones de revisión ---------- */
-  document.getElementById('copyBtn').addEventListener('click', function(){
-    var text = document.getElementById('summaryOutput').textContent;
-    var feedback = document.getElementById('copyFeedback');
-    function flash(){
-      feedback.classList.add('show');
-      setTimeout(function(){ feedback.classList.remove('show'); }, 1600);
-    }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(flash).catch(function(){
-        alert('No se pudo copiar automáticamente — selecciona el texto y cópialo manualmente.');
-      });
-    } else {
-      alert('No se pudo copiar automáticamente — selecciona el texto y cópialo manualmente.');
-    }
-  });
+  /* ---------- enviar a Formspree ---------- */
+  var submitBtn = document.getElementById('submitBtn');
+  var submitError = document.getElementById('submitError');
+  var reviewBeforeSubmit = document.getElementById('reviewBeforeSubmit');
+  var reviewAfterSubmit = document.getElementById('reviewAfterSubmit');
 
-  document.getElementById('textBtn').addEventListener('click', function(){
-    var text = document.getElementById('summaryOutput').textContent;
-    var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    var separator = isIOS ? '&' : '?';
-    var smsUrl = 'sms:' + RECIPIENT_PHONE + separator + 'body=' + encodeURIComponent(text);
-    window.location.href = smsUrl;
+  submitBtn.addEventListener('click', function(){
+    submitError.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando…';
+
+    var fd = new FormData();
+    fd.append('name', v('contact_name'));
+    fd.append('email', v('contact_email'));
+    fd.append('_replyto', v('contact_email'));
+    fd.append('_subject', 'Cuestionario del sitio web — ' + (v('business_name') || 'Sin nombre'));
+    fd.append('message', document.getElementById('summaryOutput').textContent);
+
+    fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: fd
+    }).then(function(res){
+      if(res.ok){
+        reviewBeforeSubmit.classList.add('hidden');
+        reviewAfterSubmit.classList.remove('hidden');
+      } else {
+        throw new Error('Respuesta no válida');
+      }
+    }).catch(function(){
+      submitError.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar respuestas';
+    });
   });
 
   showStep(1);
